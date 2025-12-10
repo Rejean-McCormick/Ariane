@@ -1,0 +1,55 @@
+# docker/docker-compose.yml
+#
+# Example docker-compose setup for:
+#   - atlas: Ariane Atlas HTTP server
+#   - theseus: Ariane scanner (optional, can be run on demand)
+#
+# Adjust paths, driver factory, and ports as needed.
+
+version: "3.9"
+
+services:
+  atlas:
+    build:
+      context: ..
+      dockerfile: docker/atlas.Dockerfile
+    container_name: ariane-atlas
+    environment:
+      # Main config (falls back to atlas.example.yml if missing)
+      ATLAS_CONFIG: /app/config/atlas.yml
+      ATLAS_LOGGING_CONFIG: /app/config/logging.yml
+    volumes:
+      # Mount your config and logs from the host
+      - ../config:/app/config:ro
+      - ../logs:/app/logs
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+
+  theseus:
+    build:
+      context: ..
+      dockerfile: docker/theseus.Dockerfile
+    container_name: ariane-theseus
+    depends_on:
+      - atlas
+    environment:
+      # Config (falls back to theseus.example.yml if missing)
+      THESEUS_CONFIG: /app/config/theseus.yml
+
+      # REQUIRED: driver factory that returns an ExplorationDriver instance.
+      # Override this in your local override file or CLI:
+      #   THESEUS_DRIVER_FACTORY="myproject.drivers.firefox:make_driver"
+      THESEUS_DRIVER_FACTORY: "yourpackage.drivers.example:make_driver"
+
+    volumes:
+      # Mount config and output directory
+      - ../config:/app/config:ro
+      - ../out:/app/out
+    # By default, don't auto-start theseus; you can run it on demand:
+    #   docker compose run --rm theseus
+    restart: "no"
+
+networks:
+  default:
+    name: ariane-net

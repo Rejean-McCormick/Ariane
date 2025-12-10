@@ -1,0 +1,79 @@
+# config/theseus.example.yml
+#
+# Example configuration file for the Theseus scanner.
+# Copy this file to `config/theseus.yml` and adjust values as needed.
+
+theseus:
+  # ---------------------------------------------------------------------------
+  # Application identity (used when exporting to Atlas)
+  # ---------------------------------------------------------------------------
+  app:
+    app_id: "example-web-app"      # logical name of the application
+    version: "1.0.0"               # optional application version
+    platform: "web"                # e.g. "web", "windows", "linux", "android"
+    locale: "en-US"                # optional locale tag
+
+  # ---------------------------------------------------------------------------
+  # Driver configuration
+  # ---------------------------------------------------------------------------
+  driver:
+    # Currently this example assumes a web driver (e.g. Selenium/Playwright).
+    type: "web"                    # e.g. "web" or a custom driver type
+
+    web:
+      start_url: "https://example.com"
+      browser: "firefox"           # e.g. "firefox", "chrome"
+      # Optional: implementation-specific options for your driver wrapper
+      options:
+        headless: true
+
+  # ---------------------------------------------------------------------------
+  # Exploration behaviour (maps to ExplorationConfig)
+  # ---------------------------------------------------------------------------
+  exploration:
+    max_depth: 10                  # maximum DFS depth from the root state
+    max_states: 1000               # maximum distinct states to discover
+    max_transitions: 10000         # maximum transitions to record
+    skip_on_error: true            # continue on driver/action errors
+    log_actions: true              # log each action as it is performed
+
+  # ---------------------------------------------------------------------------
+  # State tracking behaviour (maps to StateTrackerConfig)
+  # ---------------------------------------------------------------------------
+  state_tracker:
+    prefer_fingerprint_keys:
+      - "structural"
+      - "visual"
+      - "semantic"
+    allow_id_fallback: true        # fall back to UIState.id if no fingerprints
+    auto_generate_ids: true        # generate IDs when state.id is empty
+
+  # ---------------------------------------------------------------------------
+  # Fingerprint engine behaviour (maps to FingerprintEngineConfig)
+  # ---------------------------------------------------------------------------
+  fingerprint_engine:
+    enable_structural: true        # hash DOM / accessibility tree
+    enable_visual: false           # hash screenshots (requires screenshot support)
+    enable_semantic: true          # hash aggregated text content
+
+    structural_key: "structural"   # key used in UIState.fingerprints
+    visual_key: "visual"
+    semantic_key: "semantic"
+
+  # ---------------------------------------------------------------------------
+  # Output: where to send the resulting Atlas bundle
+  # ---------------------------------------------------------------------------
+  output:
+    # mode:
+    #   "filesystem" – write JSON bundle(s) to disk (via sandbox_tools/FileSink)
+    #   "atlas"      – POST bundle to a running Atlas HTTP server
+    mode: "filesystem"
+
+    filesystem:
+      output_dir: "./out/theseus"  # base directory for local bundle files
+      use_timestamp_subdirs: true  # create per-run timestamp folders
+
+    atlas:
+      base_url: "http://localhost:8080"  # Atlas HTTP server (if mode == "atlas")
+      api_key: null                      # set if Atlas auth is enabled
+      timeout: 10                        # HTTP timeout in seconds

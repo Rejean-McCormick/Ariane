@@ -1,0 +1,130 @@
+# Example configuration for the Theseus human-guided recorder.
+#
+# This file is NOT used directly by the core library; it is an example
+# schema for CLI / tooling that wraps SessionRecorder.
+#
+# Tools are expected to:
+#   - Read this YAML.
+#   - Construct an ExplorationDriver and StateTracker.
+#   - Construct SessionRecorder(session_id, author, default_intent_id, base_metadata).
+#   - Decide how to export the resulting states/transitions.
+
+recorder:
+  # ------------------------------------------------------------------
+  # Session metadata
+  # ------------------------------------------------------------------
+  session:
+    # Optional identifier for the human operator; stored in metadata on
+    # states and transitions as "author".
+    author: "assistant-1"
+
+    # Optional default intent_id to apply when a step has no explicit intent.
+    # Example: "export_pdf", "save", "create_project"
+    default_intent_id: null
+
+    # Base metadata merged into every state/transition before ingest.
+    # Per-step metadata keys always override these.
+    base_metadata:
+      source: "human"
+      tool: "cli-recorder"
+
+  # ------------------------------------------------------------------
+  # Target application description
+  # (mirrors Theseus app configuration for consistency)
+  # ------------------------------------------------------------------
+  app:
+    # Logical identifier for the application being recorded.
+    app_id: "example-app"
+
+    # Optional version string of the recorded app.
+    version: "1.0.0"
+
+    # Platform string; should match values used in UIState.platform.
+    # Examples: "web", "windows", "linux", "android", "macos"
+    platform: "web"
+
+    # Optional IETF language tag for the locale.
+    locale: "en-US"
+
+  # ------------------------------------------------------------------
+  # Driver configuration (how to attach to the UI)
+  # This mirrors the structure used in config/theseus.example.yml but
+  # is kept separate so recorder tooling can choose its own subset.
+  # ------------------------------------------------------------------
+  driver:
+    # Type of driver to use for this recording session.
+    # Examples: "web", "windows", "linux", "android"
+    type: "web"
+
+    web:
+      # Starting URL for the session (if applicable).
+      start_url: "https://example.com"
+
+      # Browser choice for web sessions; the concrete tooling decides how
+      # to interpret this (selenium / playwright, etc.).
+      # Examples: "firefox", "chrome", "chromium"
+      browser: "firefox"
+
+      # Driver-specific options (shape is tooling-specific).
+      options:
+        headless: false
+
+    # windows / linux / android blocks can be added in the same style
+    # if you implement corresponding drivers.
+
+  # ------------------------------------------------------------------
+  # StateTracker configuration
+  # (aligned with theseus.core.state_tracker.StateTrackerConfig)
+  # ------------------------------------------------------------------
+  tracker:
+    prefer_fingerprint_keys:
+      - "structural"
+      - "semantic"
+
+    allow_id_fallback: true
+    auto_generate_ids: true
+
+  # ------------------------------------------------------------------
+  # Prompting / annotation behavior
+  # (used by CLI / UI tooling, not by SessionRecorder itself)
+  # ------------------------------------------------------------------
+  prompts:
+    # Whether to ask the human for an intent description on each step.
+    ask_intent_per_step: true
+
+    # Whether to allow adding a freeform text note for a step.
+    ask_freeform_note: true
+
+    # If true, the tool may offer suggestions from the global intent
+    # registry (see theseus/recording/prompts.py).
+    suggest_intents: true
+
+  # ------------------------------------------------------------------
+  # Output / export behavior
+  # (decided by recorder tooling; SessionRecorder only returns models)
+  # ------------------------------------------------------------------
+  output:
+    # Mode for handling the recorded data: "filesystem" or "atlas".
+    mode: "atlas"
+
+    filesystem:
+      # Directory where bundles (JSON/NDJSON/etc.) will be written.
+      output_dir: "./output/recordings"
+
+      # If true, each run is written into a timestamped subdirectory.
+      use_timestamp_subdirs: true
+
+    atlas:
+      # Base URL of the Atlas HTTP API (see atlas/api/http_server.py).
+      base_url: "http://localhost:8080"
+
+      # Optional API key for authenticated Atlas instances.
+      api_key: null
+
+      # Request timeout in seconds.
+      timeout: 10
+
+    # Default tags to apply at ingest time (e.g. via StateRecord.tags).
+    tags:
+      - "source:human"
+      - "recorded"

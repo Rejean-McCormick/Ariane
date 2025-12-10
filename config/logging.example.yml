@@ -1,0 +1,98 @@
+# config/logging.example.yml
+#
+# Example logging configuration for Ariane components (Theseus, Atlas, SDK).
+# Copy this file to `config/logging.yml` and adjust levels / handlers as needed.
+#
+# This file is intended to be loaded and passed to `logging.config.dictConfig`
+# after converting from YAML to a Python dict.
+
+version: 1
+
+# Set this to true to disable any pre-existing loggers created by libraries.
+disable_existing_loggers: false
+
+# ---------------------------------------------------------------------------
+# Formatters
+# ---------------------------------------------------------------------------
+formatters:
+  simple:
+    format: "[%(levelname)s] %(name)s: %(message)s"
+
+  detailed:
+    format: "%(asctime)s [%(levelname)s] %(name)s (%(filename)s:%(lineno)d) - %(message)s"
+    datefmt: "%Y-%m-%dT%H:%M:%SZ"
+
+# ---------------------------------------------------------------------------
+# Handlers
+# ---------------------------------------------------------------------------
+handlers:
+  console:
+    class: logging.StreamHandler
+    level: INFO
+    formatter: simple
+    stream: ext://sys.stdout
+
+  console_debug:
+    class: logging.StreamHandler
+    level: DEBUG
+    formatter: detailed
+    stream: ext://sys.stdout
+
+  # Example rotating file handler for longer-running services
+  file_rotating:
+    class: logging.handlers.RotatingFileHandler
+    level: INFO
+    formatter: detailed
+    filename: "logs/ariane.log"
+    maxBytes: 10485760      # 10 MB
+    backupCount: 5
+    encoding: "utf-8"
+
+# ---------------------------------------------------------------------------
+# Loggers
+# ---------------------------------------------------------------------------
+loggers:
+  # Core explorers (Theseus)
+  theseus:
+    level: INFO
+    handlers: [console]
+    propagate: false
+
+  theseus.core:
+    level: INFO
+    handlers: [console]
+    propagate: false
+
+  theseus.drivers:
+    level: INFO
+    handlers: [console]
+    propagate: false
+
+  # Atlas server & storage
+  atlas:
+    level: INFO
+    handlers: [console]
+    propagate: false
+
+  atlas.api:
+    level: INFO
+    handlers: [console]
+    propagate: false
+
+  atlas.storage:
+    level: INFO
+    handlers: [console]
+    propagate: false
+
+  # SDK / consumers
+  consumers:
+    level: WARNING
+    handlers: [console]
+    propagate: false
+
+# ---------------------------------------------------------------------------
+# Root logger
+# ---------------------------------------------------------------------------
+root:
+  level: WARNING
+  handlers: [console]

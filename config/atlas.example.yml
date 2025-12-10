@@ -1,0 +1,79 @@
+# config/atlas.example.yml
+#
+# Example configuration for the Atlas HTTP server.
+# Copy this file to `config/atlas.yml` and adjust for your environment.
+
+atlas:
+  # ---------------------------------------------------------------------------
+  # HTTP server
+  # ---------------------------------------------------------------------------
+  server:
+    host: "0.0.0.0"     # interface to bind (e.g. "127.0.0.1" for local only)
+    port: 8080          # port for the Atlas HTTP API
+    log_level: "INFO"   # e.g. "DEBUG", "INFO", "WARNING", "ERROR"
+
+  # ---------------------------------------------------------------------------
+  # In-memory storage limits (maps to GraphStoreConfig)
+  # ---------------------------------------------------------------------------
+  storage:
+    # NOTE: current implementation uses in-memory storage only. These values
+    # are just soft limits to guard against runaway ingestion.
+    max_contexts: 100                   # maximum number of contexts
+    max_states_per_context: 10000       # cap per context
+    max_transitions_per_context: 50000  # cap per context
+
+  # ---------------------------------------------------------------------------
+  # Signing / trust configuration (used with atlas.storage.signing)
+  # ---------------------------------------------------------------------------
+  signing:
+    enabled: false
+
+    # Default verification key for signatures produced by Theseus or other
+    # crawlers. If you enable signing, point this at a PEM-encoded public key.
+    default_public_key_path: "./keys/theseus_public.pem"
+
+    # Optional list of named trusted keys (for multi-crawler setups).
+    trusted_keys:
+      - name: "local-theseus"
+        public_key_path: "./keys/theseus_public.pem"
+
+  # ---------------------------------------------------------------------------
+  # API authentication (maps to AuthConfig / Principal)
+  # ---------------------------------------------------------------------------
+  auth:
+    enabled: false              # set to true to require an API key
+    header_name: "X-API-Key"    # header inspected by Authenticator
+    optional: false             # if true, missing key is allowed (read-only)
+
+    # API keys are defined as:
+    #
+    #   api_keys:
+    #     "<actual_key_string>":
+    #       id: "<principal-id>"
+    #       scopes: [ "read", "ingest" ]
+    #       metadata:
+    #         any: "value"
+    #
+    # These will be turned into Principal instances at startup.
+    api_keys:
+      # Example development key (change this!):
+      "example-dev-key-123":
+        id: "dev-client"
+        scopes: ["read", "ingest"]
+        metadata:
+          note: "local development client"
+
+  # ---------------------------------------------------------------------------
+  # CORS / HTTP behaviour (for reverse proxies, browsers, etc.)
+  # ---------------------------------------------------------------------------
+  http:
+    cors:
+      enabled: false
+      allowed_origins:
+        - "http://localhost:3000"
+      allowed_methods:
+        - "GET"
+        - "POST"
+      allowed_headers:
+        - "Content-Type"
+        - "X-API-Key"
